@@ -53,18 +53,23 @@
 
 	__webpack_require__(2);
 	ListCp = React.createClass({displayName: "ListCp",
+	    //初始状态，初始基础属性
 	    getInitialState: function() {
 	        return{
+	            //属性状态包括日期 加载状态，标签，参数（这个是干嘛用的）
 	            data:null,
 	            loading:true,
 	            tag:null,
+	            //？？？
 	            parameter:{cmd: "list", page: "1", item: 18, by: "download", order: "down"}
 	        };
 	    },
+	    //react中will 函数在进入状态之前调用，did 函数在进入状态之后调用
+	    // 一旦你的组件已经运行了 render 函数，并实际将组件渲染到了 DOM 中，componentDidMount 就会被调用。
 	    componentDidMount:function(){
 	        this._loadSongsData(this.state.parameter);
-	        //
 	        var self = this;
+	        //？？？？？？
 	        EventEmitter.subscribe("clickTag", function(data) {
 	            //console.log(data);
 	            self.state.tag = data;
@@ -80,6 +85,7 @@
 	            self._loadSongsData(self.state.parameter);
 	        });
 	    },
+	    //在这render部分，所有的html部分和样式添部分都在这里完成
 	    render:function(){
 	        //console.log(this.state);
 	        //文件存储基础路径
@@ -93,12 +99,13 @@
 	        var pageTitle = "最新更新";
 	        var loadingClass = "";
 	        var errorClass = "";
+	        var titleTotal="";
 	        
 	        if(this.state.tag!=null){
 	            pageTitle = this.state.tag+"/"+pageTitle;
 	        }
 	        if(data&&data.STATUS=="[I]OK"){
-	            pageTitle = pageTitle +"("+data.CURRENTPAGE+"/"+data.TOTALPAGE+")";
+	            titleTotal = "("+data.CURRENTPAGE+"/"+data.TOTALPAGE+")";
 	            for(var i=0;i<data.COUNTPERPAGE;i++){
 	                songData.push(data[i]);
 	            }
@@ -109,17 +116,31 @@
 	        }else{
 	            errorClass = "error";    
 	        }
+	        //在这对每一首歌进行包装，重新组成一个新的数组
 	        var songs = songData.map(function(song) {
 	          return   React.createElement("div", {key: song.ID, className: "col-xs-6 col-sm-4 col-md-3 col-lg-2"}, 
 	                      React.createElement("div", {className: "item", "data-sm": song.ID}, 
+
 	                        React.createElement("div", {className: "pos-rlt"}, 
-	                          React.createElement("div", {className: "item-overlay opacity r r-2x bg-black"}, 
-	                            React.createElement("div", {className: "center text-center m-t-n"}, 
-	                              React.createElement("a", {href: "#"}, React.createElement("i", {className: "play fa fa-play-circle i-2x"}))
-	                            )
+
+	                          React.createElement("div", {className: "item-overlay opacity r r-2x bg-black play "}, 
+	                              React.createElement("div", {className: "center text-center m-t-n"}, 
+	                                  React.createElement("a", {href: "#", "data-toggle": "class"}, 
+	                                    React.createElement("i", {className: " fa  icon-control-play  i-2x play text"}), 
+	                                      React.createElement("i", {className: "icon-control-pause i-2x text-active"})
+	                                  )
+	                              ), 
+	                              React.createElement("div", {className: "bottom padder m-b-sm"}, 
+	                                  React.createElement("a", {href: "#", className: "pull-right", "data-toggle": "class"}, 
+	                                      React.createElement("i", {className: "fa fa-heart-o text"}), 
+	                                      React.createElement("i", {className: "fa fa-heart text-active text-danger"})
+	                                  )
+	                              )
 	                          ), 
-	                          React.createElement("a", {href: "#"}, React.createElement("img", {src: filebase+song.ID+".jpg", alt: "", className: "cover r r-2x img-full"}))
+
+	                            React.createElement("a", {href: "#"}, React.createElement("img", {src: filebase+song.ID+".jpg", alt: "", className: "cover r r-2x img-full"}))
 	                        ), 
+
 	                        React.createElement("div", {className: "padder-v"}, 
 	                          React.createElement("a", {href: "#", "data-bjax": true, "data-target": "#bjax-target", "data-el": "#bjax-el", "data-replace": "true", className: "title text-ellipsis"}, song.TITLE), 
 	                          React.createElement("a", {href: "#", "data-bjax": true, "data-target": "#bjax-target", "data-el": "#bjax-el", "data-replace": "true", className: "author text-ellipsis text-xs text-muted"}, song.AUTHOR)
@@ -131,6 +152,7 @@
 	            return React.createElement("li", {key: page.page, className: page.className}, React.createElement("a", {"data-page": page.page, href: "#", className: "numPage"}, page.text));
 	        });
 	        //console.log(pages);
+	        //为loading状态添加样式
 	        if(this.state.loading){
 	            loadingClass = "loading";
 	        }else{
@@ -141,10 +163,11 @@
 	                React.createElement("section", null, 
 	                  React.createElement("section", {className: "vbox"}, 
 	                    React.createElement("section", {className: "scrollable padder-lg"}, 
-	                      React.createElement("h2", {className: "font-thin m-b"}, pageTitle), 
+	                      React.createElement("h2", {className: "font-thin m-b "}, pageTitle, " ", React.createElement("h3", null, titleTotal)), 
 	                      React.createElement("div", {onClick: this.handleSongClick, className: "row row-sm"}, 
 	                          songs
 	                      ), 
+
 	                      React.createElement("ul", {onClick: this.handlePageClick, className: "pagination pagination"}, 
 	                        React.createElement("li", {className: "prePageLi"}, React.createElement("a", {href: "#", className: "prePage"}, React.createElement("i", {className: "fa fa-chevron-left"}))), 
 	                        pages, 
@@ -236,34 +259,46 @@
 	        }
 	        return pageData;
 	    },
+	    //加载歌曲数据，设置加载状态 jquery ajax学习
 	    _loadSongsData:function(parameter){
 	        this.setState({
 	            loading:true
 	        });
-	        var self = this;
+	        var self = this;//好处在哪？
+	        //jquery中的ajax ，$.done 成功时执行，异常时不会执行。
 	        var promise = $.get(this.props.api,parameter);
+	        //改变属性
 	        promise.done(function(data){
 	            self.setState({
 	                data:data,
 	                loading:false
 	            });
 	        });
-	        //console.log(promise);
+	       // console.log(promise);
 	    },
+	    //处理点击歌曲事件
 	    handleSongClick:function(event){
 	        event.preventDefault();
 	        var filebase = this.props.api+"?cmd=file&name=";
 	        var $target = $(event.target);
 	        var $item = $($target.parents("div.item")[0]);
+	        if($target.hasClass("active")){
+
+
+	        }
+	        else{
 	        if($target.hasClass("play")||$target.hasClass("title")){
-	            //console.log($item[0]);
+	            console.log($target[0]);
 	            var sm = $item.attr("data-sm");
 	            var title = $item.find(".title").text();
 	            var author = $item.find(".author").text();
 	            var cover = $item.find(".cover").attr("src");
-	            //调用全局事件系统的添加歌曲事件（添加一首歌，并且播放）
+	            $("div").find(".active").removeClass("active");
+	            $($item[0]).find(".play").addClass("active");
 	            EventEmitter.dispatch("playSong", { "title":title,"author":author,"cover":cover,"file":filebase+sm+".mp3"});
-	        }
+
+	        }}
+
 	        function addToMyPlaylist(title,author,cover,href,isplay){
 	              //当前播放列表去重复
 	              for(i in myPlaylist.playlist){
@@ -362,7 +397,7 @@
 
 
 	// module
-	exports.push([module.id, "#bjax-target .loading {\n  display: none; }\n\n#bjax-target .error {\n  display: none; }\n\n@media (max-width: 767px) {\n  #bjax-target .pagination {\n    width: 100%; }\n    #bjax-target .pagination li {\n      display: none; }\n    #bjax-target .pagination li.nextPageLi, #bjax-target .pagination li.prePageLi, #bjax-target .pagination li.first, #bjax-target .pagination li.last {\n      display: inline-block;\n      text-align: center;\n      width: 25%; }\n      #bjax-target .pagination li.nextPageLi a, #bjax-target .pagination li.prePageLi a, #bjax-target .pagination li.first a, #bjax-target .pagination li.last a {\n        width: 100%; } }\n\n@media (max-width: 767px) {\n  #bjax-target .padder-lg {\n    padding-bottom: 60px; } }\n", ""]);
+	exports.push([module.id, "#bjax-target .loading {\n  display: none; }\n\n#bjax-target .error {\n  display: none; }\n\n#bjax-target .play {\n  cursor: pointer; }\n\n#bjax-target h3, #bjax-target h2 {\n  font-family: \"Microsoft YaHei\";\n  display: inline-block; }\n\n@media (max-width: 767px) {\n  #bjax-target .pagination {\n    width: 100%; }\n    #bjax-target .pagination li {\n      display: none; }\n    #bjax-target .pagination li.nextPageLi, #bjax-target .pagination li.prePageLi, #bjax-target .pagination li.first, #bjax-target .pagination li.last {\n      display: inline-block;\n      text-align: center;\n      width: 25%; }\n      #bjax-target .pagination li.nextPageLi a, #bjax-target .pagination li.prePageLi a, #bjax-target .pagination li.first a, #bjax-target .pagination li.last a {\n        width: 100%; } }\n\n@media (max-width: 767px) {\n  #bjax-target .padder-lg {\n    padding-bottom: 60px; } }\n", ""]);
 
 	// exports
 

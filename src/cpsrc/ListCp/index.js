@@ -1,17 +1,22 @@
 require("./index.scss");
 ListCp = React.createClass({
+    //初始状态，初始基础属性
     getInitialState: function() {
         return{
+            //属性状态包括日期 加载状态，标签，参数（这个是干嘛用的）
             data:null,
             loading:true,
             tag:null,
+            //？？？
             parameter:{cmd: "list", page: "1", item: 18, by: "download", order: "down"}
         };
     },
+    //react中will 函数在进入状态之前调用，did 函数在进入状态之后调用
+    // 一旦你的组件已经运行了 render 函数，并实际将组件渲染到了 DOM 中，componentDidMount 就会被调用。
     componentDidMount:function(){
         this._loadSongsData(this.state.parameter);
-        //
         var self = this;
+        //？？？？？？
         EventEmitter.subscribe("clickTag", function(data) {
             //console.log(data);
             self.state.tag = data;
@@ -27,6 +32,7 @@ ListCp = React.createClass({
             self._loadSongsData(self.state.parameter);
         });
     },
+    //在这render部分，所有的html部分和样式添部分都在这里完成
     render:function(){
         //console.log(this.state);
         //文件存储基础路径
@@ -40,12 +46,13 @@ ListCp = React.createClass({
         var pageTitle = "最新更新";
         var loadingClass = "";
         var errorClass = "";
+        var titleTotal="";
         
         if(this.state.tag!=null){
             pageTitle = this.state.tag+"/"+pageTitle;
         }
         if(data&&data.STATUS=="[I]OK"){
-            pageTitle = pageTitle +"("+data.CURRENTPAGE+"/"+data.TOTALPAGE+")";
+            titleTotal = "("+data.CURRENTPAGE+"/"+data.TOTALPAGE+")";
             for(var i=0;i<data.COUNTPERPAGE;i++){
                 songData.push(data[i]);
             }
@@ -56,17 +63,31 @@ ListCp = React.createClass({
         }else{
             errorClass = "error";    
         }
+        //在这对每一首歌进行包装，重新组成一个新的数组
         var songs = songData.map(function(song) {
           return   <div key={song.ID} className="col-xs-6 col-sm-4 col-md-3 col-lg-2">
                       <div className="item" data-sm={song.ID}>
+
                         <div className="pos-rlt">
-                          <div className="item-overlay opacity r r-2x bg-black">
-                            <div className="center text-center m-t-n">
-                              <a href="#"><i className="play fa fa-play-circle i-2x"></i></a>
-                            </div>
+
+                          <div className="item-overlay opacity r r-2x bg-black play ">
+                              <div className="center text-center m-t-n">
+                                  <a href="#" data-toggle="class" >
+                                    <i className=" fa  icon-control-play  i-2x play text"></i>
+                                      <i className="icon-control-pause i-2x text-active"></i>
+                                  </a>
+                              </div>
+                              <div className="bottom padder m-b-sm">
+                                  <a href="#" className="pull-right" data-toggle="class">
+                                      <i className="fa fa-heart-o text"></i>
+                                      <i className="fa fa-heart text-active text-danger"></i>
+                                  </a>
+                              </div>
                           </div>
-                          <a href="#"><img src={filebase+song.ID+".jpg"} alt="" className="cover r r-2x img-full"/></a>
+
+                            <a href="#"><img src={filebase+song.ID+".jpg"} alt="" className="cover r r-2x img-full"/></a>
                         </div>
+
                         <div className="padder-v">
                           <a href="#" data-bjax data-target="#bjax-target" data-el="#bjax-el" data-replace="true" className="title text-ellipsis">{song.TITLE}</a>
                           <a href="#" data-bjax data-target="#bjax-target" data-el="#bjax-el" data-replace="true" className="author text-ellipsis text-xs text-muted">{song.AUTHOR}</a>
@@ -78,6 +99,7 @@ ListCp = React.createClass({
             return <li key={page.page} className={page.className}><a data-page={page.page} href="#" className="numPage">{page.text}</a></li>;
         });
         //console.log(pages);
+        //为loading状态添加样式
         if(this.state.loading){
             loadingClass = "loading";
         }else{
@@ -88,10 +110,11 @@ ListCp = React.createClass({
                 <section>
                   <section className="vbox">
                     <section className="scrollable padder-lg">
-                      <h2 className="font-thin m-b">{pageTitle}</h2>
+                      <h2 className="font-thin m-b ">{pageTitle} <h3>{titleTotal}</h3></h2>
                       <div onClick={this.handleSongClick} className="row row-sm">
                           {songs}
                       </div>
+
                       <ul onClick={this.handlePageClick} className="pagination pagination">
                         <li className="prePageLi"><a href="#" className="prePage"><i className="fa fa-chevron-left"></i></a></li>
                         {pages}
@@ -183,34 +206,46 @@ ListCp = React.createClass({
         }
         return pageData;
     },
+    //加载歌曲数据，设置加载状态 jquery ajax学习
     _loadSongsData:function(parameter){
         this.setState({
             loading:true
         });
-        var self = this;
+        var self = this;//好处在哪？
+        //jquery中的ajax ，$.done 成功时执行，异常时不会执行。
         var promise = $.get(this.props.api,parameter);
+        //改变属性
         promise.done(function(data){
             self.setState({
                 data:data,
                 loading:false
             });
         });
-        //console.log(promise);
+       // console.log(promise);
     },
+    //处理点击歌曲事件
     handleSongClick:function(event){
         event.preventDefault();
         var filebase = this.props.api+"?cmd=file&name=";
         var $target = $(event.target);
         var $item = $($target.parents("div.item")[0]);
+        if($target.hasClass("active")){
+
+
+        }
+        else{
         if($target.hasClass("play")||$target.hasClass("title")){
-            //console.log($item[0]);
+            console.log($target[0]);
             var sm = $item.attr("data-sm");
             var title = $item.find(".title").text();
             var author = $item.find(".author").text();
             var cover = $item.find(".cover").attr("src");
-            //调用全局事件系统的添加歌曲事件（添加一首歌，并且播放）
+            $("div").find(".active").removeClass("active");
+            $($item[0]).find(".play").addClass("active");
             EventEmitter.dispatch("playSong", { "title":title,"author":author,"cover":cover,"file":filebase+sm+".mp3"});
-        }
+
+        }}
+
         function addToMyPlaylist(title,author,cover,href,isplay){
               //当前播放列表去重复
               for(i in myPlaylist.playlist){

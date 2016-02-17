@@ -7,6 +7,13 @@
     .error{
         display: none;
     }
+    .play{
+        cursor: pointer;
+    }
+    h3,h2{
+        font-family: "Microsoft YaHei";
+        display: inline-block;
+    }
     .pagination{
         li.first,li.last{
         }
